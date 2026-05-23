@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hyperliquid Momentum Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c0f;
+    --surface: #111418;
+    --surface2: #181c22;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --accent: #00d4a8;
+    --accent-dim: rgba(0,212,168,0.12);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.12);
+    --amber: #fbbf24;
+    --blue: #60a5fa;
+    --blue-dim: rgba(96,165,250,0.12);
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .wrap { max-width: 720px; margin: 0 auto; }
+
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  h1 {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-weight: 300;
+  }
+
+  .run-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s, transform 0.1s;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+  .run-btn:hover { opacity: 0.85; }
+  .run-btn:active { transform: scale(0.97); }
+  .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 1.5rem;
+  }
+
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+
+  .metric-label {
+    font-size: 10px;
+    font-family: var(--mono);
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .metric-val {
+    font-family: var(--mono);
+    font-size: 24px;
+    font-weight: 600;
+  }
+
+  .metric-val.bull { color: var(--accent); }
+  .metric-val.bear { color: var(--red); }
+
+  .status {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+
+  .error-box {
+    background: var(--red-dim);
+    border: 1px solid rgba(248,113,113,0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--red);
+    font-family: var(--mono);
+    font-size: 12px;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  .coin-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+  .coin-card:hover { border-color: var(--border2); }
+  .coin-card.bull { border-left: 3px solid var(--accent); }
+  .coin-card.bear { border-left: 3px solid var(--red); }
+  .coin-card.neutral { border-left: 3px solid var(--muted); }
+
+  .coin-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .coin-left { display: flex; align-items: center; gap: 12px; }
+
+  .coin-symbol {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .vol-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 2px 7px;
+    letter-spacing: 0.05em;
+  }
+
+  .coin-right { display: flex; align-items: center; gap: 10px; }
+
+  .coin-price {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .chg {
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .chg.pos { color: var(--accent); }
+  .chg.neg { color: var(--red); }
+
+  .overall-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+  .overall-badge.bull { background: var(--accent-dim); color: var(--accent); }
+  .overall-badge.bear { background: var(--red-dim); color: var(--red); }
+  .overall-badge.neutral { background: var(--surface2); color: var(--muted); }
+
+  .rsi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .rsi-cell {
+    background: var(--surface2);
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+
+  .rsi-tf {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .rsi-val {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .rsi-zone {
+    font-size: 11px;
+    font-family: var(--mono);
+  }
+  .rsi-zone.ob { color: var(--red); }
+  .rsi-zone.os { color: var(--accent); }
+  .rsi-zone.pw-up { color: var(--blue); }
+  .rsi-zone.pw-dn { color: var(--amber); }
+  .rsi-zone.mid { color: var(--muted); }
+
+  .atr-row {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  .atr-row span strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .expanding { color: var(--accent); }
+  .contracting { color: var(--muted); }
+  .ema-bull { color: var(--accent); }
+  .ema-bear { color: var(--red); }
+
+  footer {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .timestamp {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .disclaimer {
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.5rem 0;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .spinning { display: inline-block; animation: spin 1s linear infinite; }
+
+  @media (max-width: 480px) {
+    .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+    .rsi-grid { grid-template-columns: repeat(3, 1fr); }
+    h1 { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="logo">&#x25B2; Hyperliquid</div>
+      <h1>Momentum Report</h1>
+      <div class="subtitle">RSI Power Zones &middot; ATR-14 Volatility &middot; EMA 30/50 Crossover</div>
+    </div>
+    <button class="run-btn" id="runBtn" onclick="runReport()">&#x21BB; Run Report</button>
+  </header>
+
+  <div class="metrics-grid" id="metricsRow" style="display:none;">
+    <div class="metric"><div class="metric-label">Coins</div><div class="metric-val" id="mCoins">—</div></div>
+    <div class="metric"><div class="metric-label">Bullish</div><div class="metric-val bull" id="mBull">—</div></div>
+    <div class="metric"><div class="metric-label">Bearish</div><div class="metric-val bear" id="mBear">—</div></div>
+    <div class="metric"><div class="metric-label">Neutral</div><div class="metric-val" id="mNeut">—</div></div>
+  </div>
+
+  <div id="statusBar" class="status">
+    &#x25B6; Click "Run Report" to fetch live data
+  </div>
+
+  <div id="errorBar" class="error-box"></div>
+  <div id="coinsContainer"></div>
+
+  <hr class="divider" id="footerDivider" style="display:none;">
+
+  <footer id="footerRow" style="display:none;">
+    <div class="timestamp" id="timestamp"></div>
+    <div class="disclaimer">Not financial advice. For informational use only.</div>
+  </footer>
+
+</div>
+
+<script>
+const COINS = ['BTC','ETH','SOL','XRP','DOGE','AVAX','LINK','ARB','OP','INJ'];
+const MIN_VOL = 1_000_000;
+
+function ema(arr, p) {
+  const k = 2 / (p + 1);
+  let e = arr[0];
+  const r = [e];
+  for (let i = 1; i < arr.length; i++) { e = arr[i] * k + e * (1 - k); r.push(e); }
+  return r;
+}
+
+function rsi(closes, p = 14) {
+  if (closes.length < p + 1) return null;
+  let g = 0, l = 0;
+  for (let i = 1; i <= p; i++) { const d = closes[i] - closes[i-1]; if (d > 0) g += d; else l -= d; }
+  let ag = g / p, al = l / p;
+  for (let i = p + 1; i < closes.length; i++) {
+    const d = closes[i] - closes[i-1];
+    ag = (ag * (p-1) + (d > 0 ? d : 0)) / p;
+    al = (al * (p-1) + (d < 0 ? -d : 0)) / p;
+  }
+  if (al === 0) return 100;
+  return 100 - (100 / (1 + ag / al));
+}
+
+function atr(highs, lows, closes, p = 14) {
+  if (closes.length < 2) return null;
+  const trs = [];
+  for (let i = 1; i < closes.length; i++) {
+    trs.push(Math.max(highs[i]-lows[i], Math.abs(highs[i]-closes[i-1]), Math.abs(lows[i]-closes[i-1])));
+  }
+  return trs.slice(-p).reduce((a,b)=>a+b,0) / Math.min(p, trs.length);
+}
+
+function rsiZone(v) {
+  if (v >= 70) return { label: 'Overbought', cls: 'ob' };
+  if (v >= 60) return { label: 'Power zone ↑', cls: 'pw-up' };
+  if (v <= 30) return { label: 'Oversold', cls: 'os' };
+  if (v <= 40) return { label: 'Power zone ↓', cls: 'pw-dn' };
+  return { label: 'Midrange', cls: 'mid' };
+}
+
+async function fetchCandles(coin, interval, limit = 60) {
+  const endTime = Date.now();
+  const ms = { '1h': 3600000, '4h': 14400000, '1d': 86400000 };
+  const startTime = endTime - limit * ms[interval];
+  const resp = await fetch('https://api.hyperliquid.xyz/info', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'candleSnapshot', req: { coin, interval, startTime, endTime } })
+  });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return resp.json();
+}
+
+async function fetchMeta() {
+  const resp = await fetch('https://api.hyperliquid.xyz/info', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'metaAndAssetCtxs' })
+  });
+  const [meta, ctxs] = await resp.json();
+  const vol = {};
+  meta.universe.forEach((u, i) => { vol[u.name] = parseFloat(ctxs[i]?.dayNtlVlm || 0); });
+  return vol;
+}
+
+async function runReport() {
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinning">&#x21BB;</span> Fetching...';
+  document.getElementById('statusBar').style.display = 'block';
+  document.getElementById('statusBar').innerHTML = '&#x2022; Connecting to Hyperliquid...';
+  document.getElementById('errorBar').style.display = 'none';
+  document.getElementById('coinsContainer').innerHTML = '';
+  document.getElementById('metricsRow').style.display = 'none';
+  document.getElementById('footerRow').style.display = 'none';
+  document.getElementById('footerDivider').style.display = 'none';
+
+  try {
+    const volMap = await fetchMeta();
+    const eligible = COINS.filter(c => (volMap[c] || 0) >= MIN_VOL);
+    const top = eligible.length >= 5 ? eligible.slice(0, 5) : COINS.slice(0, 5);
+
+    document.getElementById('statusBar').innerHTML = `&#x2022; Analysing ${top.length} perpetuals...`;
+
+    const results = [];
+    for (const coin of top) {
+      try {
+        const [c1h, c4h, c1d] = await Promise.all([
+          fetchCandles(coin, '1h', 60),
+          fetchCandles(coin, '4h', 60),
+          fetchCandles(coin, '1d', 60)
+        ]);
+        const p = arr => ({ closes: arr.map(c=>+c.c), highs: arr.map(c=>+c.h), lows: arr.map(c=>+c.l) });
+        const d1h = p(c1h), d4h = p(c4h), d1d = p(c1d);
+        const rsi1h = rsi(d1h.closes), rsi4h = rsi(d4h.closes), rsi1d = rsi(d1d.closes);
+        const atr14 = atr(d1h.highs, d1h.lows, d1h.closes);
+        const e30 = ema(d1h.closes, 30), e50 = ema(d1h.closes, 50);
+        const l30 = e30[e30.length-1], l50 = e50[e50.length-1];
+        const emaTrend = l30 > l50 ? 'bullish' : l30 < l50 ? 'bearish' : 'neutral';
+        const last = d1h.closes[d1h.closes.length-1];
+        const prev = d1h.closes[d1h.closes.length-2] || last;
+        const chg = ((last - prev) / prev) * 100;
+        const atrPct = atr14 ? (atr14 / last) * 100 : null;
+        const expanding = atrPct !== null && atrPct > 1.5;
+        const bull = [rsi1h>50, rsi4h>50, rsi1d>50, emaTrend==='bullish'].filter(Boolean).length;
+        const overall = bull >= 3 ? 'bullish' : bull <= 1 ? 'bearish' : 'neutral';
+        results.push({ coin, last, chg, rsi1h, rsi4h, rsi1d, emaTrend, atr14, atrPct, expanding, overall, vol24h: volMap[coin]||0 });
+      } catch(e) {
+        results.push({ coin, error: e.message });
+      }
+    }
+
+    const bullN = results.filter(r=>r.overall==='bullish').length;
+    const bearN = results.filter(r=>r.overall==='bearish').length;
+    const neutN = results.filter(r=>r.overall==='neutral').length;
+    document.getElementById('mCoins').textContent = results.length;
+    document.getElementById('mBull').textContent = bullN;
+    document.getElementById('mBear').textContent = bearN;
+    document.getElementById('mNeut').textContent = neutN;
+    document.getElementById('metricsRow').style.display = 'grid';
+    document.getElementById('statusBar').style.display = 'none';
+
+    const container = document.getElementById('coinsContainer');
+    for (const r of results) {
+      const card = document.createElement('div');
+      card.className = 'coin-card ' + (r.error ? 'neutral' : r.overall);
+      if (r.error) {
+        card.innerHTML = `<div class="coin-top"><div class="coin-symbol">${r.coin}-PERP</div></div><div style="color:#6b7280;font-family:var(--mono);font-size:12px;">Error: ${r.error}</div>`;
+        container.appendChild(card); continue;
+      }
+      const z1h = rsiZone(r.rsi1h), z4h = rsiZone(r.rsi4h), z1d = rsiZone(r.rsi1d);
+      const volStr = r.vol24h >= 1e9 ? `$${(r.vol24h/1e9).toFixed(1)}B` : `$${(r.vol24h/1e6).toFixed(0)}M`;
+      const priceStr = r.last >= 1000 ? r.last.toLocaleString('en-US',{maximumFractionDigits:0}) : r.last >= 1 ? r.last.toFixed(2) : r.last.toFixed(5);
+      const chgStr = (r.chg >= 0 ? '+' : '') + r.chg.toFixed(2) + '%';
+      const atrStr = r.atr14 ? `${r.atr14.toFixed(2)} (${r.atrPct.toFixed(2)}%)` : 'n/a';
+      const emaCls = r.emaTrend === 'bullish' ? 'ema-bull' : r.emaTrend === 'bearish' ? 'ema-bear' : '';
+      const emaLbl = r.emaTrend === 'bullish' ? 'EMA 30 &gt; 50 ↑' : r.emaTrend === 'bearish' ? 'EMA 30 &lt; 50 ↓' : 'EMA flat';
+      card.innerHTML = `
+        <div class="coin-top">
+          <div class="coin-left">
+            <div class="coin-symbol">${r.coin}-PERP</div>
+            <div class="vol-tag">24h ${volStr}</div>
+          </div>
+          <div class="coin-right">
+            <div class="coin-price">$${priceStr} <span class="chg ${r.chg>=0?'pos':'neg'}">${chgStr}</span></div>
+            <div class="overall-badge ${r.overall}">${r.overall}</div>
+          </div>
+        </div>
+        <div class="rsi-grid">
+          <div class="rsi-cell"><div class="rsi-tf">1H RSI</div><div class="rsi-val">${r.rsi1h.toFixed(1)}</div><div class="rsi-zone ${z1h.cls}">${z1h.label}</div></div>
+          <div class="rsi-cell"><div class="rsi-tf">4H RSI</div><div class="rsi-val">${r.rsi4h.toFixed(1)}</div><div class="rsi-zone ${z4h.cls}">${z4h.label}</div></div>
+          <div class="rsi-cell"><div class="rsi-tf">1D RSI</div><div class="rsi-val">${r.rsi1d.toFixed(1)}</div><div class="rsi-zone ${z1d.cls}">${z1d.label}</div></div>
+        </div>
+        <div class="atr-row">
+          <span><strong>EMA trend:</strong> <span class="${emaCls}">${emaLbl}</span></span>
+          <span><strong>ATR-14:</strong> ${atrStr} &middot; <span class="${r.expanding?'expanding':'contracting'}">${r.expanding?'Expanding':'Contracting'}</span></span>
+        </div>
+      `;
+      container.appendChild(card);
+    }
+
+    document.getElementById('timestamp').textContent = 'Last run: ' + new Date().toLocaleString('en-US',{timeZone:'America/New_York',dateStyle:'medium',timeStyle:'short'}) + ' ET';
+    document.getElementById('footerDivider').style.display = 'block';
+    document.getElementById('footerRow').style.display = 'flex';
+
+  } catch(e) {
+    document.getElementById('statusBar').style.display = 'none';
+    document.getElementById('errorBar').style.display = 'block';
+    document.getElementById('errorBar').textContent = 'Failed to load data: ' + e.message;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '&#x21BB; Run Report';
+}
+
+runReport();
+</script>
+</body>
+</html>
